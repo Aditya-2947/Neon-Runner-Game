@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Run: Elimination | 3D Endless Runner</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Google Fonts for futuristic cyberpunk aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Plus+Jakarta+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Import Three.js via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+    <!-- Game Canvas -->
+    <canvas id="game-canvas"></canvas>
+
+    <!-- UI Overlay Wrapper -->
+    <div id="ui-container">
+        
+        <!-- Screen 1: Start Screen -->
+        <div id="start-screen" class="menu-screen active">
+            <div class="menu-content">
+                <h1 class="game-title">NEON RUN</h1>
+                <div class="subtitle">ELIMINATION CHAMPIONSHIP</div>
+                
+                <div class="options-container">
+                    <div class="option-group">
+                        <label for="player-name">Your Name</label>
+                        <input type="text" id="player-name" class="text-input" value="NEON_RIDER" maxlength="12">
+                    </div>
+
+                    <div class="option-group">
+                        <label for="bot-count">Opponent Bots</label>
+                        <div class="select-wrapper">
+                            <select id="bot-count">
+                                <option value="4">4 Competitors (5 total)</option>
+                                <option value="6">6 Competitors (7 total)</option>
+                                <option value="9" selected>9 Competitors (10 total)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="option-group">
+                        <label>Your Runner Color</label>
+                        <div class="color-picker-grid">
+                            <button class="color-btn active" data-color="#00f3ff" style="background-color: #00f3ff; box-shadow: 0 0 15px rgba(0,243,255,0.5);"></button>
+                            <button class="color-btn" data-color="#ff007f" style="background-color: #ff007f;"></button>
+                            <button class="color-btn" data-color="#39ff14" style="background-color: #39ff14;"></button>
+                            <button class="color-btn" data-color="#ff9900" style="background-color: #ff9900;"></button>
+                            <button class="color-btn" data-color="#bd00ff" style="background-color: #bd00ff;"></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h3>Controls</h3>
+                    <div class="controls-grid">
+                        <div class="control-item">
+                            <span class="key">A</span> / <span class="key">D</span> or <span class="key">←</span> / <span class="key">→</span>
+                            <span class="desc">Move Lane Left/Right</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="key">W</span> or <span class="key">↑</span> / <span class="key">Space</span>
+                            <span class="desc">Jump (dodge gaps, rocks, fire)</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="key">S</span> or <span class="key">↓</span> / <span class="key">Shift</span>
+                            <span class="desc">Slide (dodge low beams)</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="key">E</span>
+                            <span class="desc">Dash / Bump Bots</span>
+                        </div>
+                    </div>
+                    <div class="touch-note">Swipe on touchscreens to move, jump, and slide.</div>
+                </div>
+
+                <button id="start-btn" class="glow-btn">START RACE</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Game HUD (Heads-Up Display) -->
+        <div id="hud" class="hud-screen">
+            <!-- Top HUD Panel -->
+            <div class="hud-top">
+                <div class="hud-stat-box">
+                    <span class="stat-label">DISTANCE</span>
+                    <span id="hud-distance" class="stat-value">0m</span>
+                </div>
+                
+                <div class="hud-stat-box">
+                    <span class="stat-label">ALIVE</span>
+                    <span id="hud-runners-count" class="stat-value">10/10</span>
+                </div>
+
+                <div class="hud-stat-box">
+                    <span class="stat-label">COINS</span>
+                    <span id="hud-coins" class="stat-value">0</span>
+                </div>
+
+                <div class="hud-stat-box">
+                    <span class="stat-label">SPEED</span>
+                    <span id="hud-speed" class="stat-value">1.0x</span>
+                </div>
+
+                <div class="hud-stat-box" id="combo-box" style="display:none;">
+                    <span class="stat-label">COMBO</span>
+                    <span id="hud-combo" class="stat-value">0</span>
+                </div>
+            </div>
+
+            <!-- Left Leaderboard Sidebar -->
+            <div id="leaderboard-container">
+                <div class="leaderboard-header">LIVE LEADERBOARD</div>
+                <div id="leaderboard-list">
+                    <!-- Dynamic entries will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Elimination Notifications (Center-Top) -->
+            <div id="announcement-banner">
+                <!-- Example: "⚡ BOT SPEEDY was eliminated by low beam!" -->
+            </div>
+            
+            <!-- Countdown overlay at start of run -->
+            <div id="countdown-overlay">
+                <span id="countdown-number">3</span>
+            </div>
+
+            <!-- Stamina Bar for Dash -->
+            <div id="stamina-bar-container">
+                <div id="stamina-bar-fill"></div>
+                <span id="stamina-label">DASH [E]</span>
+            </div>
+
+            <!-- Victory Run Quit Option -->
+            <div id="victory-quit-container" style="display: none;">
+                <button id="victory-quit-btn" class="glow-btn victory-quit-btn">🏆 CLAIM VICTORY & QUIT [Q]</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Game Over / Victory Screen -->
+        <div id="game-over-screen" class="menu-screen">
+            <div class="menu-content game-over-box">
+                <h1 id="end-title" class="game-title victory">VICTORY!</h1>
+                <div id="end-subtitle" class="subtitle">LAST RUNNER STANDING</div>
+
+                <div class="stats-summary-grid">
+                    <div class="summary-item">
+                        <div class="summary-label">Final Rank</div>
+                        <div id="summary-rank" class="summary-val highlight">1st / 10</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Distance Run</div>
+                        <div id="summary-distance" class="summary-val">1204m</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Coins Collected</div>
+                        <div id="summary-coins" class="summary-val">42</div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-label">Race Duration</div>
+                        <div id="summary-time" class="summary-val">84s</div>
+                    </div>
+                </div>
+
+                <div class="end-actions-grid" style="display: flex; gap: 15px; width: 100%;">
+                    <button id="retry-btn" class="glow-btn">RACE AGAIN</button>
+                    <button id="quit-menu-btn" class="glow-btn outline-btn">MAIN MENU</button>
+                    <button id="spectate-btn" class="glow-btn outline-btn" style="display: none;">SPECTATE</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Game Entry Point -->
+    <script type="module" src="src/game.js?t=20260704214800"></script>
+</body>
+</html>
